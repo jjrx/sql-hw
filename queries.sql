@@ -3,14 +3,7 @@ SELECT first_name, last_name
 FROM actor;
 
 -- 1b. Display the first and last name of each actor in a single column in upper case letters. Name the column Actor Name.
-ALTER TABLE actor
-ADD COLUMN Actor_Name VARCHAR(30) AFTER last_name;
-
-UPDATE actor
-SET Actor_Name = CONCAT(first_name, ' ', last_name);
-
--- VS
-SELECT CONCAT(first_name, ' ', last_name) AS Actor_Name
+SELECT CONCAT(first_name, ' ', last_name) AS `Actor Name`
 FROM actor;
 
 -- 2a. You need to find the ID number, first name, and last name of an actor, of whom you know only the first name, "Joe." What is one query would you use to obtain this information?
@@ -112,8 +105,19 @@ ON f.language_id = l.language_id
 WHERE (title LIKE "K%" OR title LIKE "Q%") AND name = "English";
 
 -- 7b. Use subqueries to display all actors who appear in the film Alone Trip.
-
-
+SELECT actor_id, first_name, last_name
+FROM actor
+WHERE actor_id IN 
+(
+	SELECT actor_id
+	FROM film_actor
+	WHERE film_id = 
+	(
+		SELECT film_id
+		FROM film
+		WHERE title = "Alone Trip"
+	)
+);
 
 -- 7c. You want to run an email marketing campaign in Canada, for which you will need the names and email addresses of all Canadian customers. Use joins to retrieve this information.
 SELECT first_name, last_name, email, country
@@ -163,10 +167,40 @@ JOIN country co
 ON c.country_id = co.country_id;
 
 -- 7h. List the top five genres in gross revenue in descending order. (Hint: you may need to use the following tables: category, film_category, inventory, payment, and rental.)
+SELECT name AS category, SUM(amount) as gross_revenue
+FROM film_category fc
+JOIN category c
+ON fc.category_id = c.category_id
+JOIN inventory i
+ON i.film_id = fc.film_id
+JOIN rental r
+ON r.inventory_id = i.inventory_id
+JOIN payment p
+ON r.rental_id = p.rental_id
+GROUP BY category
+ORDER BY gross_revenue DESC
+LIMIT 5;
 
 -- 8a. In your new role as an executive, you would like to have an easy way of viewing the Top five genres by gross revenue. Use the solution from the problem above to create a view. If you haven't solved 7h, you can substitute another query to create a view.
--- 8b. How would you display the view that you created in 8a?
--- 8c. You find that you no longer need the view top_five_genres. Write a query to delete it.
+CREATE VIEW top_five_revenue AS
+(SELECT name AS category, SUM(amount) as gross_revenue
+FROM film_category fc
+JOIN category c
+ON fc.category_id = c.category_id
+JOIN inventory i
+ON i.film_id = fc.film_id
+JOIN rental r
+ON r.inventory_id = i.inventory_id
+JOIN payment p
+ON r.rental_id = p.rental_id
+GROUP BY category
+ORDER BY gross_revenue DESC
+LIMIT 5);
 
+-- 8b. How would you display the view that you created in 8a?
+SELECT * FROM top_five_revenue;
+
+-- 8c. You find that you no longer need the view top_five_genres. Write a query to delete it.
+DROP VIEW top_five_revenue;
 
 
